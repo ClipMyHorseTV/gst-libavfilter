@@ -1,6 +1,5 @@
 use crate::error::{AvError, Error};
 use crate::sys;
-use core::num;
 use std::ffi::{CString, c_void};
 
 #[derive(Debug, Clone, PartialEq)]
