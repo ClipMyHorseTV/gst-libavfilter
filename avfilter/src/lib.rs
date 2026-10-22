@@ -3,11 +3,17 @@ pub use avfilter_sys as sys;
 mod error;
 pub mod formats;
 mod frame;
+mod graph;
+mod info;
 mod options;
+mod probe;
 
 pub use error::{AvError, Error};
 pub use frame::{Frame, Metadata};
+pub use graph::{Graph, Pulled, VideoParams};
+pub use info::FilterInfo;
 pub use options::FilterOptions;
+pub use probe::probe_video_formats;
 
 pub type Rational = sys::AVRational;
 
