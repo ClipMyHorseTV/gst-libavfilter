@@ -1,12 +1,20 @@
 [package]
 name = "avfilter-sys"
 description = "Raw FFI bindings to FFmpeg libavfilter and libavutil"
+links = "avfilter"
+build = "build.rs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
 
 [dependencies]
-avfilter-sys.workspace = true
-thiserror.workspace = true
+libc.workspace = true
+
+[build-dependencies]
+system-deps = "7"
+bindgen = "0.73"
+
+[package.metadata.system-deps]
+libavfilter = "9.12" # FFmpeg 6.1
+libavutil = "58.29"  # FFmpeg 6.1
