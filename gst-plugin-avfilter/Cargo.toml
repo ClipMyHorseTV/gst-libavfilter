@@ -1,0 +1,12 @@
+[package]
+name = "gst-plugin-avfilter"
+description = "GStreamer elements wrapping FFmpeg libavfilter filters"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+avfilter-sys.workspace = true
+thiserror.workspace = true

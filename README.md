@@ -1,2 +1,3 @@
-# gst-minterpolate
-A GStreamer plugin that wraps the minterpolate filter of ffmpeg
+# gst-libavfilter
+
+A GStreamer plugin that wraps the libavfilter library of ffmpeg

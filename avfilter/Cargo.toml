@@ -1,0 +1,12 @@
+[package]
+name = "avfilter"
+description = "Safe Rust wrapper around FFmpeg libavfilter (no GStreamer dependency)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+avfilter-sys.workspace = true
+thiserror.workspace = true
