@@ -3,9 +3,11 @@ pub use avfilter_sys as sys;
 mod error;
 pub mod formats;
 mod frame;
+mod options;
 
 pub use error::{AvError, Error};
 pub use frame::{Frame, Metadata};
+pub use options::FilterOptions;
 
 pub type Rational = sys::AVRational;
 
