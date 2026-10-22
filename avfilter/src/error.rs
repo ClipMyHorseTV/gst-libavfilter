@@ -35,12 +35,5 @@ pub enum Error {
 }
 
 pub(crate) fn check(op: &'static str, ret: c_int) -> Result<c_int, Error> {
-    if ret < 0 {
-        Err(Error::Av {
-            op,
-            code: AvError(ret),
-        })
-    } else {
-        Ok(ret)
-    }
+    if ret < 0 { Err(Error::Av { op, code: AvError(ret) }) } else { Ok(ret) }
 }

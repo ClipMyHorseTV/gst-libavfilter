@@ -1,10 +1,5 @@
 //! Raw FFI bindings to FFmpeg's libavfilter and libavutil. Everything here is `unsafe`.
-#![allow(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
-    clippy::all
-)]
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, clippy::all)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
@@ -29,15 +24,7 @@ mod tests {
     fn headers_match_runtime_library() {
         let lavfi = unsafe { avfilter_version() };
         let lavu = unsafe { avutil_version() };
-        assert_eq!(
-            lavfi >> 16,
-            LIBAVFILTER_VERSION_MAJOR,
-            "libavfilter headers ≠ runtime library"
-        );
-        assert_eq!(
-            lavu >> 16,
-            LIBAVUTIL_VERSION_MAJOR,
-            "libavutil headers ≠ runtime library"
-        );
+        assert_eq!(lavfi >> 16, LIBAVFILTER_VERSION_MAJOR, "libavfilter headers ≠ runtime library");
+        assert_eq!(lavu >> 16, LIBAVUTIL_VERSION_MAJOR, "libavutil headers ≠ runtime library");
     }
 }
