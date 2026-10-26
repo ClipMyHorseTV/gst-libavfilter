@@ -85,7 +85,7 @@ impl Frame {
     pub fn set_color_range(&mut self, range: sys::AVColorRange) {
         self.raw_mut().color_range = range;
     }
-    pub fn set_colourspace(&mut self, space: sys::AVColorSpace) {
+    pub fn set_colorspace(&mut self, space: sys::AVColorSpace) {
         self.raw_mut().colorspace = space;
     }
 
