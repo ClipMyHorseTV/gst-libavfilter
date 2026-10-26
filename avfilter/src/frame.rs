@@ -90,7 +90,7 @@ impl Frame {
     }
 
     /// Copy one plane *into* this frame (frame must be writable, e.g. from `new_video`).
-    pub fn copy_plance_from(&mut self, plane: usize, src: &[u8], src_stride: usize) -> Result<(), Error> {
+    pub fn copy_plane_from(&mut self, plane: usize, src: &[u8], src_stride: usize) -> Result<(), Error> {
         let (bytewidth, rows) =
             formats::plane_geometry(self.format(), self.width(), self.height(), plane).ok_or(Error::BadPlane(plane))?;
         if rows == 0 {

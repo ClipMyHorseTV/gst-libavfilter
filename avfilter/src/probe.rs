@@ -29,7 +29,7 @@ pub fn probe_video_formats(
         .filter(|&format| {
             let params = VideoParams {
                 format,
-                width: 64,
+                width: 64, // realistic size: some filters reject tiny frames (minterpolate needs ≥ 2×mb_size)
                 height: 64,
                 time_base: rational(1, 25),
                 frame_rate: rational(25, 1),

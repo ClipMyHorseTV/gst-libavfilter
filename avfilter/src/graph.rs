@@ -102,6 +102,14 @@ impl Graph {
         }
     }
 
+    /// Signal end of stream. `pts` (in the input time base) is where the stream ends.
+    pub fn close(&mut self, pts: Option<i64>) -> Result<(), Error> {
+        let ret = unsafe {
+            sys::av_buffersrc_close(self.src, pts.unwrap_or(sys::AV_NOPTS_VALUE), sys::AV_BUFFERSRC_FLAG_PUSH as u32)
+        };
+        check("av_buffersrc_close", ret).map(|_| ())
+    }
+
     /// What the graph actually produces (after negotiation). Filters may change any of this.
     pub fn output_video(&self) -> VideoParams {
         let s = self.sink;
