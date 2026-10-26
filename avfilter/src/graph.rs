@@ -1,4 +1,3 @@
-use avfilter_sys::av_buffersink_get_w;
 
 use crate::error::{AvError, Error, check};
 use crate::{FilterOptions, Frame, Rational, sys};
