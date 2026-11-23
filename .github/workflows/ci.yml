@@ -1,0 +1,57 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04 # GStreamer 1.24, FFmpeg 6.1 = our minimums
+    strategy:
+      fail-fast: false
+      matrix:
+        ffmpeg: [system, "7.1.5", "8.0.3"] # check https://ffmpeg.org/releases/ for current point releases
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # gst-plugin-version-helper reads git history
+
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config clang libclang-dev nasm \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good libavfilter-dev
+
+      - name: Cache FFmpeg build
+        if: matrix.ffmpeg != 'system'
+        id: ffcache
+        uses: actions/cache@v4
+        with:
+          path: ~/ffmpeg-${{ matrix.ffmpeg }}
+          key: ffmpeg-${{ matrix.ffmpeg }}-${{ hashFiles('ci/build-ffmpeg.sh') }}
+
+      - name: Build minimal FFmpeg
+        if: matrix.ffmpeg != 'system' && steps.ffcache.outputs.cache-hit != 'true'
+        run: ci/build-ffmpeg.sh "${{ matrix.ffmpeg }}" "$HOME/ffmpeg-${{ matrix.ffmpeg }}"
+
+      - name: Point the build at it
+        if: matrix.ffmpeg != 'system'
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/ffmpeg-${{ matrix.ffmpeg }}/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$HOME/ffmpeg-${{ matrix.ffmpeg }}/lib" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: "clippy, rustfmt" }
+      - uses: Swatinem/rust-cache@v2
+        with: { key: "${{ matrix.ffmpeg }}" }
+
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+      - name: Plugin links only libavfilter + libavutil from FFmpeg
+        if: matrix.ffmpeg != 'system'
+        run: |
+          cargo build --release -p gst-plugin-avfilter
+          readelf -d target/release/libgstavfilter.so | grep NEEDED
+          if readelf -d target/release/libgstavfilter.so | grep -E 'NEEDED.*(avcodec|avformat|swscale|swresample|postproc)'; then
+            echo "plugin links FFmpeg libraries it must not need" >&2
+            exit 1
+          fi

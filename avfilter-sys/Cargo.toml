@@ -8,6 +8,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+# bindgen copies FFmpeg header comments into bindings.rs; rustdoc would try to
+# compile the C snippets in them as doctests (fails on FFmpeg >= 7.1).
+[lib]
+doctest = false
+
 [dependencies]
 libc.workspace = true
 

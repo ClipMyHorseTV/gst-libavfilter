@@ -20,20 +20,20 @@ impl AvVideoFilter {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct FilterBehaviour {
+pub struct FilterBehavior {
     /// Stateless filter: QoS may drop input frames.
     pub qos_safe: bool,
     /// Filter doesn't flush its tail at EOF: feed this many copies of the last frame, then clip.
     pub eos_tail_frames: u32,
 }
 
-impl FilterBehaviour {
+impl FilterBehavior {
     pub const DEFAULT: Self = Self { qos_safe: false, eos_tail_frames: 0 };
 }
 
 pub trait AvVideoFilterImpl: BaseTransformImpl + ObjectSubclass<Type: IsA<AvVideoFilter>> {
     const FILTER: &'static str;
-    const BEHAVIOUR: FilterBehaviour = FilterBehaviour::DEFAULT;
+    const BEHAVIOR: FilterBehavior = FilterBehavior::DEFAULT;
 
     /// Options used for format probing at class-init time (no instance exists yet).
     fn probe_options() -> FilterOptions {
@@ -73,7 +73,7 @@ struct Hooks {
 pub struct Class {
     parent: gst_base::ffi::GstBaseTransformClass,
     filter: &'static str,
-    behaviour: FilterBehaviour,
+    behavior: FilterBehavior,
     hooks: Hooks,
 }
 
@@ -95,7 +95,7 @@ unsafe impl<T: AvVideoFilterImpl> IsSubclassable<T> for AvVideoFilter {
         Self::parent_class_init::<T>(class);
         let class = class.as_mut();
         class.filter = T::FILTER;
-        class.behavior = T::BEHAVIOUR;
+        class.behavior = T::BEHAVIOR;
         // SAFETY (all closures): GObject only calls these on instances of T's type.
         class.hooks = Hooks {
             options: |obj| unsafe { obj.unsafe_cast_ref::<T::Type>() }.imp().options(),

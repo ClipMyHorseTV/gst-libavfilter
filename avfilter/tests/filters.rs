@@ -79,3 +79,12 @@ fn probing_finds_native_formats() {
     let idet = avfilter::probe_video_formats("idet", &FilterOptions::new(), &cands);
     assert_eq!(idet, cands);
 }
+
+#[test]
+fn filter_info_finds_options() {
+    let info = avfilter::FilterInfo::lookup("minterpolate").unwrap();
+    assert!(info.has_option("fps"));
+    assert!(info.has_option("mi_mode"));
+    assert!(!info.has_option("no_such_option"));
+    assert!(!avfilter::FilterInfo::lookup("hflip").unwrap().has_option("fps"));
+}

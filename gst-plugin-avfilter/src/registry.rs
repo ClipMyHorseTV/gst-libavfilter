@@ -1,3 +1,4 @@
+use crate::filters;
 use gst::glib;
 use std::sync::LazyLock;
 
@@ -17,7 +18,29 @@ pub struct Entry {
     pub register: fn(&gst::Plugin) -> Result<(), glib::BoolError>,
 }
 
-pub static ENTRIES: &[Entry] = &[];
+pub static ENTRIES: &[Entry] = &[
+    Entry {
+        filter: "hflip",
+        element: "avfilter_hflip",
+        gpl_only: false,
+        options: &[],
+        register: filters::video::hflip::register,
+    },
+    Entry {
+        filter: "minterpolate",
+        element: "avfilter_minterpolate",
+        gpl_only: false,
+        options: filters::video::minterpolate::OPTIONS,
+        register: filters::video::minterpolate::register,
+    },
+    Entry {
+        filter: "idet",
+        element: "avfilter_idet",
+        gpl_only: false,
+        options: filters::video::idet::OPTIONS,
+        register: filters::video::idet::register,
+    },
+];
 
 pub fn register_all(plugin: &gst::Plugin) -> Result<(), glib::BoolError> {
     for e in ENTRIES {

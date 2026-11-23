@@ -11,7 +11,7 @@ mod probe;
 pub use error::{AvError, Error};
 pub use frame::{Frame, Metadata};
 pub use graph::{Graph, Pulled, VideoParams};
-pub use info::FilterInfo;
+pub use info::{FilterInfo, library_is_gpl};
 pub use options::FilterOptions;
 pub use probe::probe_video_formats;
 

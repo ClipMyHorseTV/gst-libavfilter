@@ -1,4 +1,3 @@
-
 use crate::error::{AvError, Error, check};
 use crate::{FilterOptions, Frame, Rational, sys};
 use std::ffi::{CStr, CString, c_char};
@@ -104,7 +103,7 @@ impl Graph {
     /// Signal end of stream. `pts` (in the input time base) is where the stream ends.
     pub fn close(&mut self, pts: Option<i64>) -> Result<(), Error> {
         let ret = unsafe {
-            sys::av_buffersrc_close(self.src, pts.unwrap_or(sys::AV_NOPTS_VALUE), sys::AV_BUFFERSRC_FLAG_PUSH as u32)
+            sys::av_buffersrc_close(self.src, pts.unwrap_or(sys::AV_NOPTS_VALUE), sys::AV_BUFFERSRC_FLAG_PUSH)
         };
         check("av_buffersrc_close", ret).map(|_| ())
     }

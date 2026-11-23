@@ -1,5 +1,7 @@
 //! Raw FFI bindings to FFmpeg's libavfilter and libavutil. Everything here is `unsafe`.
 #![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, clippy::all)]
+// bindgen derives PartialEq on structs holding C callbacks; we never compare those.
+#![allow(unpredictable_function_pointer_comparisons)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 

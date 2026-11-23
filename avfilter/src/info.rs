@@ -25,9 +25,11 @@ impl FilterInfo {
         if class.is_null() {
             return false;
         };
+        // With AV_OPT_SEARCH_FAKE_OBJ, `obj` must point to an `AVClass*` (like the first field
+        // of a real object), not to the AVClass itself.
         let found = unsafe {
             sys::av_opt_find(
-                class as *const _ as *mut c_void,
+                &class as *const *const sys::AVClass as *mut c_void,
                 cname.as_ptr(),
                 ptr::null(),
                 0,
