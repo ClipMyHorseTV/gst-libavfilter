@@ -1,0 +1,113 @@
+name: Release
+# Builds the GStreamer plugin when a GitHub release is published and attaches the
+# binaries to that release. Can also be re-run manually for an existing release tag.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to (re)build and upload, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: write # needed to upload release assets
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  check-version:
+    name: Tag matches Cargo version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
+
+      - name: Compare tag with workspace version
+        run: |
+          CARGO_VERSION=$(sed -n '/^\[workspace.package\]/,/^\[/{s/^version *= *"\(.*\)"/\1/p}' Cargo.toml)
+          if [[ "${TAG#v}" != "$CARGO_VERSION" ]]; then
+            echo "::error::Release tag '$TAG' does not match workspace version '$CARGO_VERSION' in Cargo.toml" >&2
+            exit 1
+          fi
+          echo "Releasing version $CARGO_VERSION"
+
+  build:
+    name: Build (FFmpeg ${{ matrix.ffmpeg_label }})
+    needs: check-version
+    runs-on: ubuntu-24.04 # GStreamer 1.24, FFmpeg 6.1 = our minimums
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # One build per FFmpeg major: the plugin links libavfilter.so.N, so users
+          # must pick the asset matching the FFmpeg installed on their system.
+          - { ffmpeg: system, ffmpeg_label: "6.1" }
+          - { ffmpeg: "7.1.5", ffmpeg_label: "7.1" }
+          - { ffmpeg: "8.0.3", ffmpeg_label: "8.0" }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0 # gst-plugin-version-helper reads git history
+
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config clang libclang-dev nasm \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libavfilter-dev
+
+      - name: Cache FFmpeg build
+        if: matrix.ffmpeg != 'system'
+        id: ffcache
+        uses: actions/cache@v4
+        with:
+          path: ~/ffmpeg-${{ matrix.ffmpeg }}
+          key: ffmpeg-${{ matrix.ffmpeg }}-${{ hashFiles('ci/build-ffmpeg.sh') }}
+
+      - name: Build minimal FFmpeg
+        if: matrix.ffmpeg != 'system' && steps.ffcache.outputs.cache-hit != 'true'
+        run: ci/build-ffmpeg.sh "${{ matrix.ffmpeg }}" "$HOME/ffmpeg-${{ matrix.ffmpeg }}"
+
+      - name: Point the build at it
+        if: matrix.ffmpeg != 'system'
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/ffmpeg-${{ matrix.ffmpeg }}/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$HOME/ffmpeg-${{ matrix.ffmpeg }}/lib" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { key: "release-${{ matrix.ffmpeg }}" }
+
+      - name: Build plugin
+        run: cargo build --release --locked -p gst-plugin-avfilter
+
+      - name: Plugin links only libavfilter + libavutil from FFmpeg
+        if: matrix.ffmpeg != 'system'
+        run: |
+          readelf -d target/release/libgstavfilter.so | grep NEEDED
+          if readelf -d target/release/libgstavfilter.so | grep -E 'NEEDED.*(avcodec|avformat|swscale|swresample|postproc)'; then
+            echo "plugin links FFmpeg libraries it must not need" >&2
+            exit 1
+          fi
+
+      - name: Package
+        id: package
+        run: |
+          NAME="gst-plugin-avfilter-${TAG}-linux-x86_64-ffmpeg${{ matrix.ffmpeg_label }}"
+          mkdir -p "dist/$NAME"
+          cp target/release/libgstavfilter.so README.md LICENSE "dist/$NAME/"
+          strip --strip-unneeded "dist/$NAME/libgstavfilter.so"
+          tar -C dist -czf "dist/$NAME.tar.gz" "$NAME"
+          (cd dist && sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
+          echo "asset=dist/$NAME.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" "${{ steps.package.outputs.asset }}.sha256" --clobber --repo "$GITHUB_REPOSITORY"
