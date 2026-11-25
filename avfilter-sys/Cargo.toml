@@ -1,0 +1,25 @@
+[package]
+name = "avfilter-sys"
+description = "Raw FFI bindings to FFmpeg libavfilter and libavutil"
+links = "avfilter"
+build = "build.rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# bindgen copies FFmpeg header comments into bindings.rs; rustdoc would try to
+# compile the C snippets in them as doctests (fails on FFmpeg >= 7.1).
+[lib]
+doctest = false
+
+[dependencies]
+libc.workspace = true
+
+[build-dependencies]
+system-deps = "7"
+bindgen = "0.73"
+
+[package.metadata.system-deps]
+libavfilter = "9.12" # FFmpeg 6.1
+libavutil = "58.29"  # FFmpeg 6.1

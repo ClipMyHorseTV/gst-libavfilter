@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["avfilter-sys", "avfilter", "gst-plugin-avfilter"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "LGPL-2.1-or-later"
+repository = "https://github.com/ClipMyHorseTV/gst-libavfilter"
+authors = ["Simon Koester <s.koester@clipmyhorse.tv>"]
+
+[workspace.dependencies]
+avfilter-sys = { path = "avfilter-sys" }
+avfilter = { path = "avfilter" }
+gst = { package = "gstreamer", version = "0.25", features = ["v1_24"] }
+gst-base = { package = "gstreamer-base", version = "0.25", features = [
+    "v1_24",
+] }
+gst-video = { package = "gstreamer-video", version = "0.25", features = [
+    "v1_24",
+] }
+gst-check = { package = "gstreamer-check", version = "0.25" }
+thiserror = "2"
+libc = "0.2"
