@@ -34,6 +34,13 @@ pub static ENTRIES: &[Entry] = &[
         register: filters::video::minterpolate::register,
     },
     Entry {
+        filter: "minterpolate",
+        element: "avfilter_frameinsert",
+        gpl_only: false,
+        options: filters::video::frameinsert::OPTIONS,
+        register: filters::video::frameinsert::register,
+    },
+    Entry {
         filter: "idet",
         element: "avfilter_idet",
         gpl_only: false,
